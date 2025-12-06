@@ -57,7 +57,7 @@ const BarChart = ({ title, labels, data, color = 'hsl(199, 89%, 48%)' }: BarChar
         padding: 12,
         titleFont: {
           family: 'Inter',
-          weight: '600' as const,
+          weight: 600,
         },
         bodyFont: {
           family: 'JetBrains Mono',

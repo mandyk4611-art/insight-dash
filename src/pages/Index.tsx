@@ -1,29 +1,35 @@
-import { Phone, CheckCircle, TrendingUp, Users, MessageSquare, Target } from 'lucide-react';
+import { Phone, CheckCircle, TrendingUp, MessageSquare, Target, Users, AlertCircle } from 'lucide-react';
 import Header from '@/components/dashboard/Header';
 import StatCard from '@/components/dashboard/StatCard';
 import DoughnutChart from '@/components/dashboard/DoughnutChart';
 import BarChart from '@/components/dashboard/BarChart';
 import LineChart from '@/components/dashboard/LineChart';
-import {
-  getTotalCalls,
-  getCompletedCalls,
-  getConversionRate,
-  getAverageInteractions,
-  getCallStatusDistribution,
-  getSentimentDistribution,
-  getInterestFlagDistribution,
-  getAwarenessDistribution,
-  getSchemeLevelDistribution,
-  getDailyCallVolume,
-} from '@/data/callData';
+import FileUpload from '@/components/dashboard/FileUpload';
+import { useCallData } from '@/hooks/useCallData';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Index = () => {
-  const callStatusData = getCallStatusDistribution();
-  const sentimentData = getSentimentDistribution();
-  const interestData = getInterestFlagDistribution();
-  const awarenessData = getAwarenessDistribution();
-  const schemeLevelData = getSchemeLevelDistribution();
-  const dailyVolume = getDailyCallVolume();
+  const { 
+    fileName, 
+    isLoading, 
+    error, 
+    loadFromCSV, 
+    clearData, 
+    analytics 
+  } = useCallData();
+
+  const {
+    totalCalls,
+    completedCalls,
+    conversionRate,
+    averageInteractions,
+    callStatusDistribution,
+    sentimentDistribution,
+    interestDistribution,
+    awarenessDistribution,
+    schemeLevelDistribution,
+    dailyVolume,
+  } = analytics;
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,13 +39,36 @@ const Index = () => {
       <div className="relative container mx-auto px-4 py-8 max-w-7xl">
         <Header />
 
+        {/* File Upload */}
+        <FileUpload 
+          onFileLoaded={loadFromCSV}
+          currentFileName={fileName}
+          onClear={clearData}
+        />
+
+        {/* Error Alert */}
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-8">
+            <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-muted-foreground">Processing data...</p>
+          </div>
+        )}
+
         {/* Key Metrics */}
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-muted-foreground mb-4 uppercase tracking-wider">Key Performance Indicators</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Total Calls"
-              value={getTotalCalls()}
+              value={totalCalls}
               subtitle="All call attempts"
               icon={Phone}
               trend={{ value: 12.5, isPositive: true }}
@@ -47,7 +76,7 @@ const Index = () => {
             />
             <StatCard
               title="Completed Calls"
-              value={getCompletedCalls()}
+              value={completedCalls}
               subtitle="Successfully connected"
               icon={CheckCircle}
               trend={{ value: 8.3, isPositive: true }}
@@ -55,7 +84,7 @@ const Index = () => {
             />
             <StatCard
               title="Conversion Rate"
-              value={`${getConversionRate()}%`}
+              value={`${conversionRate}%`}
               subtitle="Interest shown"
               icon={TrendingUp}
               trend={{ value: 5.2, isPositive: true }}
@@ -63,7 +92,7 @@ const Index = () => {
             />
             <StatCard
               title="Avg Interactions"
-              value={getAverageInteractions()}
+              value={averageInteractions}
               subtitle="Per completed call"
               icon={MessageSquare}
               colorClass="text-warning"
@@ -82,8 +111,8 @@ const Index = () => {
             />
             <BarChart
               title="Call Status Distribution"
-              labels={Object.keys(callStatusData)}
-              data={Object.values(callStatusData)}
+              labels={Object.keys(callStatusDistribution)}
+              data={Object.values(callStatusDistribution)}
             />
           </div>
         </section>
@@ -94,17 +123,17 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <DoughnutChart
               title="Sentiment Analysis"
-              data={sentimentData}
+              data={sentimentDistribution}
               colors={['hsl(142, 71%, 45%)', 'hsl(38, 92%, 50%)', 'hsl(0, 72%, 51%)']}
             />
             <DoughnutChart
               title="Interest in Loan"
-              data={interestData}
+              data={interestDistribution}
               colors={['hsl(168, 84%, 40%)', 'hsl(217, 33%, 40%)']}
             />
             <DoughnutChart
               title="Scheme Awareness"
-              data={awarenessData}
+              data={awarenessDistribution}
               colors={['hsl(199, 89%, 48%)', 'hsl(262, 83%, 58%)']}
             />
           </div>
@@ -116,8 +145,8 @@ const Index = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <BarChart
               title="User Scheme Level"
-              labels={Object.keys(schemeLevelData)}
-              data={Object.values(schemeLevelData)}
+              labels={Object.keys(schemeLevelDistribution)}
+              data={Object.values(schemeLevelDistribution)}
               color="hsl(262, 83%, 58%)"
             />
             <div className="chart-container animate-fade-in">
@@ -128,14 +157,14 @@ const Index = () => {
                     <Target className="w-5 h-5 text-primary" />
                     <span className="text-foreground">Target Audience Reached</span>
                   </div>
-                  <span className="mono text-primary font-semibold">{getTotalCalls()}</span>
+                  <span className="mono text-primary font-semibold">{totalCalls}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/30">
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-success" />
                     <span className="text-foreground">Qualified Leads</span>
                   </div>
-                  <span className="mono text-success font-semibold">{getCompletedCalls()}</span>
+                  <span className="mono text-success font-semibold">{completedCalls}</span>
                 </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-secondary/30 border border-border/30">
                   <div className="flex items-center gap-3">
@@ -143,7 +172,9 @@ const Index = () => {
                     <span className="text-foreground">Positive Sentiment Rate</span>
                   </div>
                   <span className="mono text-accent font-semibold">
-                    {((sentimentData['Positive'] || 0) / Object.values(sentimentData).reduce((a, b) => a + b, 0) * 100).toFixed(1)}%
+                    {Object.values(sentimentDistribution).reduce((a, b) => a + b, 0) > 0 
+                      ? ((sentimentDistribution['Positive'] || 0) / Object.values(sentimentDistribution).reduce((a, b) => a + b, 0) * 100).toFixed(1)
+                      : '0'}%
                   </span>
                 </div>
               </div>
@@ -153,7 +184,7 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="text-center text-muted-foreground text-sm py-8 border-t border-border/30">
-          <p>PM-SVANidhi Voice Agent Dashboard • Data Last Updated: December 2025</p>
+          <p>PM-SVANidhi Voice Agent Dashboard • {fileName ? `Data from: ${fileName}` : 'Sample Data'}</p>
         </footer>
       </div>
     </div>

@@ -67,7 +67,7 @@ const LineChart = ({ title, labels, data }: LineChartProps) => {
         padding: 12,
         titleFont: {
           family: 'Inter',
-          weight: '600' as const,
+          weight: 600,
         },
         bodyFont: {
           family: 'JetBrains Mono',
